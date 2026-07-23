@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="HackWare CyberFunk — El videojuego arcade competitivo de programación. Compite contra otros programadores en minijuegos ultrarrápidos. ¿Tienes el combo?" />
+  <meta name="theme-color" content="#0A0010" />
+  <title>HackWare CyberFunk</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/css/main.css" />
+  <link rel="stylesheet" href="/css/animations.css" />
+  <link rel="stylesheet" href="/css/screens.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+</head>
+<body>
+
+  <!-- Animated background grid -->
+  <div class="bg-grid"></div>
+
+  <!-- Toast notifications -->
+  <div id="toast-container"></div>
+
+  <!-- Flash overlay (full-screen damage / correct flash) -->
+  <div id="screen-flash" style="position:fixed;inset:0;pointer-events:none;z-index:9000;transition:background 0.1s;"></div>
+
+  <!-- ══════════════════════════════════════════
+       MAIN APP
+  ═══════════════════════════════════════════ -->
+  <div id="app">
+
+    <!-- ── HOME ─────────────────────────────── -->
+    <section id="screen-home" class="screen active">
+      <div class="home-hero">
+        <div class="logo-container">
+          <p class="logo-subtitle">▶ COMPETE · CODE · SURVIVE ◀</p>
+          <h1 class="logo-title glitch logo-entrance" data-text="HackWare CyberFunk">
+            HackWare<br/>CyberFunk
+          </h1>
+          <p class="logo-tagline">El arcade del futuro. La nostalgia retro. El código.</p>
+        </div>
+      </div>
+
+      <div class="home-actions fade-in-up" style="animation-delay:0.3s;">
+        <button id="btn-create-room" class="btn btn-primary btn-lg btn-full">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          Crear Sala
+        </button>
+        <div class="home-divider">— o —</div>
+        <button id="btn-join-room" class="btn btn-outline btn-lg btn-full">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+          Unirse a Sala
+        </button>
+      </div>
+
+      <!-- Particle field -->
+      <div class="particle-field" id="particle-field"></div>
+    </section>
+
+    <!-- ── CREATE ROOM ───────────────────────── -->
+    <section id="screen-create" class="screen centered-screen">
+      <button class="back-btn" id="back-from-create">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Volver
+      </button>
+
+      <div class="form-card fade-in-scale">
+        <h2 class="screen-title">Crear <span class="accent">Sala</span></h2>
+
+        <div class="input-group">
+          <label class="input-label" for="create-username">Tu nombre</label>
+          <input id="create-username" class="input-field" type="text" placeholder="Anfitrión..." maxlength="20" autocomplete="off" />
+        </div>
+
+        <button id="btn-create-confirm" class="btn btn-primary btn-lg btn-full">
+          Crear Sala →
+        </button>
+
+        <!-- Room code display (hidden until created) -->
+        <div id="created-room-display" style="display:none;">
+          <div class="room-code-display">
+            <span class="room-code-label">Código de sala</span>
+            <span id="created-room-code" class="room-code-value">—</span>
+            <button id="copy-code-btn" class="copy-btn">📋 Copiar</button>
+          </div>
+          <p style="text-align:center;color:var(--text-muted);font-size:0.8rem;margin-top:8px;">
+            Comparte este código con tus amigos
+          </p>
+          <button id="btn-go-to-lobby" class="btn btn-success btn-full" style="margin-top:12px;">
+            Ir a la sala →
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── JOIN ROOM ─────────────────────────── -->
+    <section id="screen-join" class="screen centered-screen">
+      <button class="back-btn" id="back-from-join">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Volver
+      </button>
+
+      <div class="form-card fade-in-scale">
+        <h2 class="screen-title">Unirse a <span class="accent">Sala</span></h2>
+
+        <div class="input-group">
+          <label class="input-label" for="join-code">Código de sala</label>
+          <input id="join-code" class="input-field" type="text" placeholder="AB7FQ" maxlength="5" autocomplete="off"
+                 style="text-align:center;font-size:2rem;letter-spacing:0.4em;" />
+        </div>
+
+        <div class="input-group">
+          <label class="input-label" for="join-username">Tu nombre</label>
+          <input id="join-username" class="input-field" type="text" placeholder="Jugador..." maxlength="20" autocomplete="off" />
+        </div>
+
+        <button id="btn-join-confirm" class="btn btn-primary btn-lg btn-full">
+          Entrar a la Sala →
+        </button>
+      </div>
+    </section>
+
+    <!-- ── LOBBY ─────────────────────────────── -->
+    <section id="screen-lobby" class="screen">
+      <div class="lobby-header fade-in-down">
+        <div>
+          <p class="room-code-label" style="font-size:0.65rem;">SALA</p>
+          <span id="lobby-room-code" class="lobby-room-code">—</span>
+        </div>
+        <div style="text-align:center;">
+          <p class="screen-title" style="font-size:1.2rem;">Sala de Espera</p>
+          <p id="lobby-player-count" class="lobby-player-count">0 jugadores</p>
+        </div>
+        <button id="lobby-copy-btn" class="copy-btn">📋 Copiar</button>
+      </div>
+
+      <div id="lobby-player-list" class="player-list"></div>
+
+      <div class="lobby-actions">
+        <p id="lobby-status" class="lobby-status-bar">Esperando que todos estén listos...</p>
+        <button id="btn-ready" class="btn btn-outline btn-full">✅ Listo</button>
+        <button id="btn-start-game" class="btn btn-primary btn-full" style="display:none;">
+          🚀 Iniciar Partida
+        </button>
+      </div>
+    </section>
+
+    <!-- ── COUNTDOWN ─────────────────────────── -->
+    <section id="screen-countdown" class="screen">
+      <div id="countdown-display" class="countdown-display countdown-number">3</div>
+      <p class="countdown-label">¡Prepárate!</p>
+    </section>
+
+    <!-- ── GAME ──────────────────────────────── -->
+    <section id="screen-game" class="screen">
+      <!-- HUD -->
+      <div id="hud">
+        <!-- Lives -->
+        <div class="hud-lives" id="hud-lives">
+          <span class="life-icon">❤️</span>
+          <span class="life-icon">❤️</span>
+          <span class="life-icon">❤️</span>
+          <span class="life-icon">❤️</span>
+          <span class="life-icon">❤️</span>
+        </div>
+
+        <!-- Score -->
+        <div class="hud-score-block">
+          <span class="hud-score-label">Score</span>
+          <span id="hud-score" class="hud-score-value">0</span>
+        </div>
+
+        <!-- Combo -->
+        <div class="hud-combo-block">
+          <span class="hud-combo-label">Combo</span>
+          <span id="hud-combo" class="hud-combo-value">x1</span>
+        </div>
+
+        <!-- Round -->
+        <div class="hud-round">
+          <span>Ronda </span><span id="hud-round">1</span>
+        </div>
+
+        <!-- Mini scoreboard -->
+        <div id="hud-mini-scores" class="hud-mini-scores"></div>
+      </div>
+
+      <!-- Timer bar -->
+      <div id="timer-bar-container">
+        <div id="timer-bar" style="width:100%;"></div>
+      </div>
+
+      <!-- Minigame area -->
+      <div id="minigame-area">
+        <div id="minigame-container">
+          <!-- Minigame renders here -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ── ELIMINATED ─────────────────────────── -->
+    <section id="screen-eliminated" class="screen">
+      <div class="eliminated-header">
+        <div class="eliminated-banner">
+          <h2 class="eliminated-title">💀 Eliminado</h2>
+          <p class="eliminated-subtitle">Sigue la partida en vivo</p>
+        </div>
+      </div>
+
+      <div class="spectator-scoreboard card card-glow">
+        <h3 style="font-family:var(--font-display);font-size:1rem;color:var(--neon-cyan);letter-spacing:0.1em;margin-bottom:12px;">MARCADOR EN VIVO</h3>
+        <div id="spectator-scores"></div>
+      </div>
+    </section>
+
+    <!-- ── RESULTS ────────────────────────────── -->
+    <section id="screen-results" class="screen">
+      <h2 class="results-title">🏆 Fin de Partida</h2>
+
+      <!-- Podium (top 3) -->
+      <div id="results-podium" class="podium"></div>
+
+      <!-- Full ranking -->
+      <div id="results-ranking" class="ranking-table"></div>
+
+      <div class="results-actions">
+        <button id="btn-play-again" class="btn btn-primary btn-lg">🎮 Jugar de Nuevo</button>
+        <button id="btn-results-home" class="btn btn-outline">🏠 Inicio</button>
+      </div>
+    </section>
+
+  </div><!-- /#app -->
+
+  <!-- Socket.IO (served by the server automatically) -->
+  <script src="/socket.io/socket.io.js"></script>
+
+  <!-- App modules -->
+  <script src="/js/mockSocket.js"></script>
+  <script src="/js/socket.js"></script>
+  <script src="/js/effects.js"></script>
+  <script src="/js/hud.js"></script>
+  <script src="/js/minigames/registry.js"></script>
+  <script src="/js/minigames/quick-quiz.js"></script>
+  <script src="/js/minigames/what-prints.js"></script>
+  <script src="/js/minigames/spot-the-bug.js"></script>
+  <script src="/js/minigames/complete-code.js"></script>
+  <script src="/js/minigames/order-lines.js"></script>
+  <script src="/js/minigames/match-concepts.js"></script>
+  <script src="/js/screens/home.js"></script>
+  <script src="/js/screens/create.js"></script>
+  <script src="/js/screens/join.js"></script>
+  <script src="/js/screens/lobby.js"></script>
+  <script src="/js/screens/game.js"></script>
+  <script src="/js/screens/results.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
